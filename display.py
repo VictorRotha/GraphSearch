@@ -20,6 +20,8 @@ class Display:
         self.c_walls = (100, 100, 100)
         self.c_start = (0, 200, 0)
         self.c_target = (200, 0, 0)
+        self.cg_start = (200, 50, 0)
+        self.cg_end = (0, 50, 200)
 
         self.running = True
 
@@ -55,8 +57,7 @@ class Display:
 
     def create_walls(self):
         cellw = self.cellw
-        start = True
-        loop = True
+        start = loop = True
         while loop:
             self.screen.fill(self.c_bg)
             mpos = pg.mouse.get_pos()
@@ -85,12 +86,38 @@ class Display:
 
             pg.display.update()
 
+    def draw_visited(self, visited):
+        cellw = self.cellw
+        max_d = max([d for d, _ in self.grid.values()])
+        i = 0
+        while self.quit_loop():
+            self.clock.tick(60)
+            if i > len(visited) - 1:
+                continue
+            x, y = visited[i]
+            d, _ = self.grid[(x, y)]
+            color = self.get_color(d, max_d)
+            pg.draw.rect(self.screen, color, (x * cellw, y * cellw, cellw, cellw))
+
+            i += 1
+            self.draw_grid()
+            pg.display.update()
 
     def quit_loop(self):
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 return False
         return True
+
+    def get_color(self, d, max_d):
+        csr, csg, csb = self.cg_start
+        cer, ceg, ceb = self.cg_end
+
+        cr = abs(csr - d * (csr - cer) // max_d)
+        cg = abs(csg - d * (csg - ceg) // max_d)
+        cb = abs(csb - d * (csb - ceb) // max_d)
+
+        return cr, cg, cb
 
 
 
