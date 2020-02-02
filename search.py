@@ -4,6 +4,11 @@ class Search:
         self.start, self.target = start, target
         self.visited = []
 
+    def reset_grid(self):
+        for pos in self.grid:
+            self.grid[pos] = (0, None)
+        self.visited = []
+
     def neighbours(self, pos):
         x, y = pos
         return [(x + dx, y + dy) for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)) if (x + dx, y + dy) in self.grid]
@@ -13,7 +18,7 @@ class Search:
         node = self.target
         while self.grid[node][1] is not None:
             _, parent = self.grid[node]
-            path.append(self.grid[node][1])
+            path.append(parent)
             node = parent
         return path
 
@@ -36,25 +41,30 @@ class Search:
         visited = [self.start]
         stack = [self.start]
         distance = 0
+        deadend = False
         while stack:
             node = stack.pop()
-            visited.append(node)
             if node == self.target:
                 if branches:
-                    print('DFS TARGET FOUND AT', node, 'BRANCHES', self.grid[node][0], 'VISITED', len(visited))
+                    print('DFS ITERATIVE TARGET FOUND AT', node, 'BRANCHES', self.grid[node][0], 'VISITED', len(visited))
                 else:
-                    print('DFS TARGET FOUND AT', node, 'DISTANCE', self.grid[node][0], 'VISITED', len(visited))
+                    print('DFS ITERATIVE TARGET FOUND AT', node, 'DISTANCE', self.grid[node][0], 'VISITED', len(visited))
                 break
 
             nbs = [nb for nb in self.neighbours(node) if nb not in visited]
             stack.extend(nbs)
+            visited.extend(nbs)
 
             if branches:
                 if not nbs:
+                    deadend = True
+
+                elif deadend:
+                    deadend = False
                     distance += 1
+                    self.grid[node] = (distance, self.grid[node][1])
             else:
                 distance = self.grid[node][0] + 1
-
             for nb in nbs:
                 self.grid[nb] = (distance, node)
         return visited
@@ -72,4 +82,3 @@ class Search:
                 if self.DFS_recursive(nb):
                     return True
         return False
-

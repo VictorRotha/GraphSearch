@@ -5,13 +5,26 @@ d = Display(20,20)
 grid, start, target = d.make_grid()
 
 s = Search(grid, start, target)
-# visited = s.DFS_iterative(branches=True)
+
+visited = s.DFS_iterative(branches=False)
+
+path = s.make_path()
+d.draw_visited(visited)
+d.draw_path(path)
+
+d.reset_grid()
 s.DFS_recursive(start)
 visited = s.visited
 path = s.make_path()
-
 d.draw_visited(visited)
 d.draw_path(path)
+
+d.reset_grid()
+visited = s.BFS()
+path = s.make_path()
+d.draw_visited(visited)
+d.draw_path(path)
+
 
 
 

@@ -1,4 +1,5 @@
 import pygame as pg
+import random
 
 class Display:
     def __init__(self, cols, rows, cellw=40):
@@ -22,14 +23,21 @@ class Display:
         self.c_target = (200, 0, 0)
         self.cg_start = (200, 50, 0)
         self.cg_end = (0, 50, 200)
-        self.c_path = self.c_fg
+        self.c_path = (20, 20, 20)
 
         self.running = True
 
     def make_grid(self):
         self.create_empty_grid()
+        self.random_walls()
         self.create_walls()
         return self.grid, self.start, self.target
+
+    def reset_grid(self):
+        for pos in self.grid:
+            self.grid[pos] = (0, None)
+        self.screen.fill(self.c_bg)
+        self.draw_grid(walls=True)
 
     def draw_grid(self, walls=False):
         cellw = self.cellw
@@ -55,6 +63,19 @@ class Display:
         for x in range(self.columns):
             for y in range(self.rows):
                 self.grid[(x,y)] = (0, None)
+
+    def random_walls(self):
+        cols, rows = self.columns, self.rows
+        directions = [(1,0), (0,1), (-1,0), (0,-1)]
+        while len(self.grid)/(cols * rows) > 0.85:
+            x, y = random.randrange(cols), random.randrange(rows)
+            length = random.randrange(1, (cols * rows)**0.5 // 2 )
+            d = random.randrange(4)
+            for i in range(length):
+                x += directions[d][0]
+                y += directions[d][1]
+                if (x, y) in self.grid and not (x,y) in (self.start, self.target):
+                    del self.grid[(x, y)]
 
     def create_walls(self):
         cellw = self.cellw
@@ -87,20 +108,28 @@ class Display:
 
             pg.display.update()
 
-    def draw_visited(self, visited):
+    def draw_visited(self, visited, distance=False):
         cellw = self.cellw
         max_d = max([d for d, _ in self.grid.values()])
         i = 0
+        font = pg.font.SysFont(None, 14, bold=True)
         while self.quit_loop():
             x, y = visited[i]
             d, _ = self.grid[(x, y)]
             color = self.get_color(d, max_d)
             pg.draw.rect(self.screen, color, (x * cellw, y * cellw, cellw, cellw))
+
+            if distance:
+                text = font.render(str(d), True, self.c_fg)
+                text_rect = text.get_rect()
+                text_rect.center = (x * cellw + cellw//2, y * cellw + cellw//2)
+                self.screen.blit(text, text_rect)
+
             self.draw_grid()
 
             i = min(i + 1, len(visited) - 1)
             pg.display.update()
-            self.clock.tick(60)
+            self.clock.tick(30)
 
     def draw_path(self, path):
         cellw = self.cellw
@@ -122,14 +151,11 @@ class Display:
     def get_color(self, d, max_d):
         csr, csg, csb = self.cg_start
         cer, ceg, ceb = self.cg_end
+        if max_d > 0:
+            cr = abs(csr - d * (csr - cer) // max_d)
+            cg = abs(csg - d * (csg - ceg) // max_d)
+            cb = abs(csb - d * (csb - ceb) // max_d)
+            return cr, cg, cb
 
-        cr = abs(csr - d * (csr - cer) // max_d)
-        cg = abs(csg - d * (csg - ceg) // max_d)
-        cb = abs(csb - d * (csb - ceb) // max_d)
-
-        return cr, cg, cb
-
-
-
-
+        return self.cg_start
 
