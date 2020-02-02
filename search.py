@@ -7,6 +7,15 @@ class Search:
         x, y = pos
         return [(x + dx, y + dy) for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)) if (x + dx, y + dy) in self.grid]
 
+    def make_path(self):
+        path = [self.target]
+        node = self.target
+        while self.grid[node][1] is not None:
+            _, parent = self.grid[node]
+            path.append(self.grid[node][1])
+            node = parent
+        return path
+
     def BFS(self):
         queue = [self.start]
         visited = [self.start]

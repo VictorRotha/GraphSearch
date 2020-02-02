@@ -16,12 +16,13 @@ class Display:
 
         # colors
         self.c_bg = (0,0,0)
-        self.c_fg = (255,255,255)
+        self.c_fg = (200,200,200)
         self.c_walls = (100, 100, 100)
         self.c_start = (0, 200, 0)
         self.c_target = (200, 0, 0)
         self.cg_start = (200, 50, 0)
         self.cg_end = (0, 50, 200)
+        self.c_path = self.c_fg
 
         self.running = True
 
@@ -91,17 +92,26 @@ class Display:
         max_d = max([d for d, _ in self.grid.values()])
         i = 0
         while self.quit_loop():
-            self.clock.tick(60)
-            if i > len(visited) - 1:
-                continue
             x, y = visited[i]
             d, _ = self.grid[(x, y)]
             color = self.get_color(d, max_d)
             pg.draw.rect(self.screen, color, (x * cellw, y * cellw, cellw, cellw))
-
-            i += 1
             self.draw_grid()
+
+            i = min(i + 1, len(visited) - 1)
             pg.display.update()
+            self.clock.tick(60)
+
+    def draw_path(self, path):
+        cellw = self.cellw
+        i = 0
+        while self.quit_loop():
+            x, y = path[i]
+            pg.draw.circle(self.screen, self.c_path, (x*cellw + cellw//2, y*cellw+cellw//2), int(cellw*0.15))
+
+            i = min(i+1, len(path)-1)
+            pg.display.update()
+            self.clock.tick(10)
 
     def quit_loop(self):
         for event in pg.event.get():
