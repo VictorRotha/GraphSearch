@@ -27,28 +27,35 @@ class Display:
 
         self.running = True
 
-    def make_grid(self):
+    def make_grid(self, rndwalls=True, weight=False):
         self.create_empty_grid()
-        self.random_walls()
-        self.create_walls()
+        if rndwalls:
+            self.random_walls()
+        self.create_walls(weight=weight)
         return self.grid, self.start, self.target
 
-    def reset_grid(self):
+    def reset_grid(self, weight=False):
         for pos in self.grid:
-            self.grid[pos] = (0, None)
+            w = self.grid[pos][2]
+            self.grid[pos] = (0, None, w)
         self.screen.fill(self.c_bg)
-        self.draw_grid(walls=True)
+        self.draw_grid(walls=True, weight=weight)
 
-    def draw_grid(self, walls=False):
+    def draw_grid(self, walls=False, weight=False):
         cellw = self.cellw
         sx, sy = self.start
         tx, ty = self.target
+        font = pg.font.SysFont(None, 12)
 
-        if walls:
-            for col in range(self.columns):
-                for row in range(self.rows):
-                    if (col, row) not in self.grid:
-                        pg.draw.rect(self.screen, self.c_walls, (col * cellw, row * cellw, cellw, cellw))
+        for col in range(self.columns):
+            for row in range(self.rows):
+                if walls and (col, row) not in self.grid:
+                    pg.draw.rect(self.screen, self.c_walls, (col * cellw, row * cellw, cellw, cellw))
+                if weight and (col, row) in self.grid:
+                    text = font.render(str(self.grid[(col, row)][2]), True, self.c_fg)
+                    text_rect = text.get_rect()
+                    text_rect.center = (col * cellw + cellw // 2, row * cellw + cellw // 2)
+                    self.screen.blit(text, text_rect)
 
         pg.draw.circle(self.screen, self.c_start, (sx*cellw + cellw//2, sy*cellw + cellw//2), int(cellw*0.3))
         pg.draw.circle(self.screen, self.c_target, (tx * cellw + cellw // 2, ty * cellw + cellw // 2), int(cellw * 0.3))
@@ -59,10 +66,10 @@ class Display:
             pg.draw.line(self.screen, self.c_fg, (0, row * cellw), (self.height, row * cellw), 1)
 
     def create_empty_grid(self):
-        # grid[(x,y)] = (distance, parent)
+        # grid[(x,y)] = (distance, parent, weight)
         for x in range(self.columns):
             for y in range(self.rows):
-                self.grid[(x,y)] = (0, None)
+                self.grid[(x,y)] = (0, None, random.randrange(1, 6))
 
     def random_walls(self):
         cols, rows = self.columns, self.rows
@@ -77,7 +84,7 @@ class Display:
                 if (x, y) in self.grid and not (x,y) in (self.start, self.target):
                     del self.grid[(x, y)]
 
-    def create_walls(self):
+    def create_walls(self, weight=False):
         cellw = self.cellw
         start = loop = True
         while loop:
@@ -102,20 +109,20 @@ class Display:
                     del self.grid[pos]
             if pg.mouse.get_pressed()[2]:
                 if pos not in self.grid:
-                    self.grid[pos] = (0, None)
+                    self.grid[pos] = (0, None, random.randrange(1,6))
 
-            self.draw_grid(walls=True)
+            self.draw_grid(walls=True, weight=weight)
 
             pg.display.update()
 
     def draw_visited(self, visited, distance=False):
         cellw = self.cellw
-        max_d = max([d for d, _ in self.grid.values()])
+        max_d = max([d for d ,_ ,_ in self.grid.values()])
         i = 0
         font = pg.font.SysFont(None, 14, bold=True)
         while self.quit_loop():
             x, y = visited[i]
-            d, _ = self.grid[(x, y)]
+            d, _, _ = self.grid[(x, y)]
             color = self.get_color(d, max_d)
             pg.draw.rect(self.screen, color, (x * cellw, y * cellw, cellw, cellw))
 

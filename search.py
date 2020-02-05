@@ -4,11 +4,6 @@ class Search:
         self.start, self.target = start, target
         self.visited = []
 
-    def reset_grid(self):
-        for pos in self.grid:
-            self.grid[pos] = (0, None)
-        self.visited = []
-
     def neighbours(self, pos):
         x, y = pos
         return [(x + dx, y + dy) for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)) if (x + dx, y + dy) in self.grid]
@@ -17,7 +12,7 @@ class Search:
         path = [self.target]
         node = self.target
         while self.grid[node][1] is not None:
-            _, parent = self.grid[node]
+            _, parent, _ = self.grid[node]
             path.append(parent)
             node = parent
         return path
@@ -32,7 +27,7 @@ class Search:
                 break
             nbs = [nb for nb in self.neighbours(node) if nb not in visited]
             for nb in nbs:
-                self.grid[nb] = (self.grid[node][0] + 1, node)
+                self.grid[nb] = (self.grid[node][0] + 1, node, self.grid[nb][2])
                 queue.extend(nbs)
             visited.extend(nbs)
         return visited
@@ -62,11 +57,11 @@ class Search:
                 elif deadend:
                     deadend = False
                     distance += 1
-                    self.grid[node] = (distance, self.grid[node][1])
+                    self.grid[node] = (distance, self.grid[node][1], self.grid[node][2])
             else:
                 distance = self.grid[node][0] + 1
             for nb in nbs:
-                self.grid[nb] = (distance, node)
+                self.grid[nb] = (distance, node, self.grid[nb][2])
         return visited
 
     def DFS_recursive(self, node):
@@ -78,7 +73,7 @@ class Search:
         distance = self.grid[node][0] + 1
         for nb in nbs:
             if nb not in self.visited:
-                self.grid[nb] = (distance, node)
+                self.grid[nb] = (distance, node, self.grid[nb][2])
                 if self.DFS_recursive(nb):
                     return True
         return False
